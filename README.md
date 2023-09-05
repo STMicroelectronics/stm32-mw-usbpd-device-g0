@@ -1,5 +1,4 @@
 # Middleware USBPD Device G0 MCU Component
-USB Power Delivery device driver specific to STM32G0 for managing the type-C physical layer
 
 ![latest tag](https://img.shields.io/github/v/tag/STMicroelectronics/stm32-mw-usbpd-device-g0.svg?color=brightgreen)
 
