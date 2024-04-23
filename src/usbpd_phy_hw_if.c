@@ -258,13 +258,13 @@ void USBPDM1_EnterErrorRecovery(uint8_t PortNum)
   SET_BIT(SYSCFG->CFGR1, (Ports[PortNum].husbpd == UCPD1) ? SYSCFG_CFGR1_UCPD1_STROBE : SYSCFG_CFGR1_UCPD2_STROBE);
   LL_UCPD_RxDisable(Ports[PortNum].husbpd);
 
-#if defined(USBPD_REV30_SUPPORT)
+#if !defined(USBPDCORE_LIB_NO_PD)
   if (Ports[PortNum].settings->PE_PD3_Support.d.PE_FastRoleSwapSupport == USBPD_TRUE)
   {
     /* Set GPIO to disallow the FRS RX handling */
     LL_UCPD_FRSDetectionDisable(Ports[PortNum].husbpd);
   }
-#endif /* USBPD_REV30_SUPPORT */
+#endif /* USBPDCORE_LIB_NO_PD */
 }
 
 /**
@@ -361,7 +361,6 @@ void HW_SignalAttachement(uint8_t PortNum, CCxPin_TypeDef cc)
   (void)BSP_USBPD_PWR_VCONNInit(PortNum, (Ports[PortNum].CCx == CC1) ? 1u : 2u);
 #endif /* _VCONN_SUPPORT */
 
-#if defined(USBPD_REV30_SUPPORT)
   if (Ports[PortNum].settings->PE_PD3_Support.d.PE_FastRoleSwapSupport == USBPD_TRUE)
   {
     /* Set GPIO to allow the FRS TX handling */
@@ -370,7 +369,6 @@ void HW_SignalAttachement(uint8_t PortNum, CCxPin_TypeDef cc)
     LL_UCPD_FRSDetectionEnable(Ports[PortNum].husbpd);
     Ports[PortNum].husbpd->IMR |= UCPD_IMR_FRSEVTIE;
   }
-#endif /* USBPD_REV30_SUPPORT */
 
   /* Disable the Resistor on Vconn PIN */
   if (Ports[PortNum].CCx == CC1)
@@ -402,11 +400,13 @@ void HW_SignalDetachment(uint8_t PortNum)
   /* Enable only detection interrupt */
   WRITE_REG(Ports[PortNum].husbpd->IMR, UCPD_IMR_TYPECEVT1IE | UCPD_IMR_TYPECEVT2IE);
 #elif defined(_LOW_POWER)
+#if !defined(_DRP)
   if (USBPD_PORTPOWERROLE_SRC == Ports[PortNum].params->PE_PowerRole)
   {
     /* Enable detection interrupt */
     WRITE_REG(Ports[PortNum].husbpd->IMR, UCPD_IMR_TYPECEVT1IE | UCPD_IMR_TYPECEVT2IE);
   }
+#endif /* !_DRP */
 #endif /* !_LOW_POWER && !USBPDM1_VCC_FEATURE_ENABLED */
 
   USBPD_HW_DeInit_DMATxInstance(PortNum);
@@ -424,13 +424,11 @@ void HW_SignalDetachment(uint8_t PortNum)
     (void)BSP_USBPD_PWR_VBUSDeInit(PortNum);
   }
 
-#if defined(USBPD_REV30_SUPPORT)
   if (Ports[PortNum].settings->PE_PD3_Support.d.PE_FastRoleSwapSupport == USBPD_TRUE)
   {
     /* Set GPIO to disallow the FRS RX handling */
     LL_UCPD_FRSDetectionDisable(Ports[PortNum].husbpd);
   }
-#endif /* USBPD_REV30_SUPPORT */
 
 #endif /* !USBPDCORE_LIB_NO_PD */
   Ports[PortNum].CCx = CCNONE;
